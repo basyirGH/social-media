@@ -36,6 +36,8 @@ public class PostController {
       Post post = new Post();
       post.setAuthor(author);
       post.setContent(postdto.getContent());
+
+      postRepository.save(post);
           
       return new ResponseEntity<>(post, HttpStatus.CREATED);
 
