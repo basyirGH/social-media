@@ -1,28 +1,14 @@
 package com.basyir.projects.socialmedia.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "like")
 public class Like {
     
-    private Post post;
-    private User owner;
-    private String date;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
 
-    public Post getPost() {
-        return post;
-    }
-    public void setPost(Post post) {
-        this.post = post;
-    }
-    public User getOwner() {
-        return owner;
-    }
-    public void setOwner(User owner) {
-        this.owner = owner;
-    }
-    public String getDate() {
-        return date;
-    }
-    public void setDate(String date) {
-        this.date = date;
-    }
-    
 }

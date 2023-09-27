@@ -19,6 +19,10 @@
 		<maven.compiler.source>17</maven.compiler.source>
     	<maven.compiler.target>17</maven.compiler.target>
 	</properties>
+	<!-- <pluginRepository>
+    	<id>boxfuse-repo</id>
+    	<url>https://files.cloudcaptain.sh</url>
+	</pluginRepository> -->
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -66,11 +70,11 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		 <!-- <dependency>
-         <groupId>mysql</groupId>
-         <artifactId>mysql-connector-java</artifactId>
-         <scope>runtime</scope>
-      </dependency> -->
+		<dependency>
+    		<groupId>mysql</groupId>
+    		<artifactId>mysql-connector-java</artifactId>
+    		<version>8.0.26</version> <!-- Use the appropriate version -->
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -104,7 +108,19 @@
                 </toolchains>
             </configuration>
         </plugin>
+		<!--CloudCaptain/Boxfuse cloud computing service plugin-->
+		<plugin>
+			<groupId>com.boxfuse.client</groupId>
+			<artifactId>boxfuse-maven-plugin</artifactId>
+			<version>1.35.5.1530</version>
+			<configuration>
+				<user>f951ac751dae4852a0cfb4058a9e4262</user>
+				<secret>k9Lu0UdzzKHW1Qjd7OihxjxLRbkVSRd2WrGXfb4V9Ac7mV3xvC0Ng1oDOP1sZcyB</secret>
+			</configuration>
+		</plugin>
     </plugins>
 </build>
+
+
 
 </project>

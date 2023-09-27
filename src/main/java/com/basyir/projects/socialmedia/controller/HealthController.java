@@ -6,6 +6,6 @@ import org.springframework.web.bind.annotation.*;
 public class HealthController {
     @GetMapping("/")
     public String ping() {
-        return "Hello & Welcome to Social Media !!!";
+        return "Hello & Welcome to Basyir Social Media !!!";
     }
 }
