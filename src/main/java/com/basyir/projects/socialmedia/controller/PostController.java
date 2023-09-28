@@ -3,13 +3,13 @@ package com.basyir.projects.socialmedia.controller;
 import com.basyir.projects.socialmedia.model.*;
 import com.basyir.projects.socialmedia.repository.*;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.ResourceAccessException;
 
-//@CrossOrigin(origins = "http://localhost:8081")
 @RestController
 @RequestMapping("/posts")
 public class PostController {
@@ -19,27 +19,24 @@ public class PostController {
   @Autowired
   UserRepository userRepository;
 
-  @GetMapping("/")
-  public String ping() {
-    return "OK";
-  }
-
+  // Note
+  // @RequestParam -> /posts/create?id=[id]
+  // @PathVariable -> /posts/create/[id]
   @PostMapping("/create")
-  public ResponseEntity<Post> createPost(@RequestBody PostDTO postdto) {
+  public ResponseEntity<String> createPost(@PathVariable long authorId, @RequestBody Post post) {
     try {
 
-      long authorId = postdto.getAuthorId();
+      Optional<User> authorData = userRepository.findById(authorId);
 
-      User author = userRepository.findById(authorId)
-            .orElseThrow(() -> new ResourceAccessException("User not found with id " + authorId));
-
-      Post post = new Post();
-      post.setAuthor(author);
-      post.setContent(postdto.getContent());
-
-      postRepository.save(post);
-          
-      return new ResponseEntity<>(post, HttpStatus.CREATED);
+      if (authorData.isPresent()) {
+        User author = authorData.get();
+        post.setAuthor(author);
+        post.setContent(post.getContent());
+        postRepository.save(post);
+        return new ResponseEntity<>("Post Created", HttpStatus.CREATED);
+      } else {
+        return new ResponseEntity<>("Author not found.", HttpStatus.NOT_FOUND);
+      }
 
     } catch (Exception e) {
       return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
