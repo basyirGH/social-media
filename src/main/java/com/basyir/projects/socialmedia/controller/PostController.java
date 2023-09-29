@@ -39,6 +39,21 @@ public class PostController {
       }
 
     } catch (Exception e) {
+      return new ResponseEntity<>(e.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @GetMapping("/all")
+  public ResponseEntity<Object> getUserPosts(@RequestParam long authorId) {
+    try {
+      Optional<User> authorData = userRepository.findById(authorId);
+
+      if (authorData.isPresent()) {
+        return new ResponseEntity<>(postRepository.findAll(), HttpStatus.OK);
+      } else {
+        return new ResponseEntity<>("Author not found.", HttpStatus.NOT_FOUND);
+      }
+    } catch (Exception ex) {
       return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
