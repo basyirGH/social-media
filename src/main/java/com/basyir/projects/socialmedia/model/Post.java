@@ -1,6 +1,7 @@
 package com.basyir.projects.socialmedia.model;
 
-import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.*;
 
 
@@ -13,8 +14,9 @@ public class Post {
     private long id;
 
     @ManyToOne
-    @JoinColumn(name = "author_id")
-    private User author;
+    @JoinColumn(name = "user_id")
+    private User user;
+
     private String content;
 
     public Post (){
@@ -27,11 +29,11 @@ public class Post {
     public void setId(long id) {
         this.id = id;
     }
-    public User getAuthor() {
-        return author;
+    public User getUser() {
+        return user;
     }
-    public void setAuthor(User author) {
-        this.author = author;
+    public void setUser(User user) {
+        this.user = user;
     }
     public String getContent() {
         return content;

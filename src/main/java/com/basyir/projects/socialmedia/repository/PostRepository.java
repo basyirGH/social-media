@@ -1,6 +1,9 @@
 package com.basyir.projects.socialmedia.repository;
 
 import com.basyir.projects.socialmedia.model.Post;
+
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 
@@ -12,6 +15,6 @@ basic CRUD operations and query methods based on naming
 conventions and method signatures. */
 
 public interface PostRepository extends JpaRepository<Post, Long> {
-  //List<Post> findByAuthor(boolean published);
+  List<Post> findByUserId(long userId);
   
 }

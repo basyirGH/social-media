@@ -12,31 +12,33 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/posts")
-public class PostController {
+@RequestMapping("/likes")
+public class LikeController {
 
   @Autowired
   PostRepository postRepository;
   @Autowired
   UserRepository userRepository;
+  @Autowired
+  LikeRepository likeRepository;
 
-  // Note
-  // @RequestParam -> /posts/create?id=[id]
-  // @PathVariable -> /posts/create/{id}
-  @PostMapping("/create/{userId}")
-  public ResponseEntity<String> createPost(@PathVariable long userId, @RequestBody Post post) {
+  @PostMapping("/push/{postId}/{userId}")
+  public ResponseEntity<String> pushLike(@PathVariable long postId, @PathVariable long userId) {
     try {
 
+      Optional<Post> postData = postRepository.findById(postId);
       Optional<User> userData = userRepository.findById(userId);
 
-      if (userData.isPresent()) {
+      if (postData.isPresent() && userData.isPresent()) {
+        Post post = postData.get();
         User user = userData.get();
-        post.setUser(user);
-        post.setContent(post.getContent());
-        postRepository.save(post);
-        return new ResponseEntity<>("Post Created", HttpStatus.CREATED);
+        Like like = new Like();
+        like.setPost(post);
+        like.setUser(user);
+        likeRepository.save(like);
+        return new ResponseEntity<>("Post Liked", HttpStatus.CREATED);
       } else {
-        return new ResponseEntity<>("Author not found.", HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>("Post/User not found.", HttpStatus.NOT_FOUND);
       }
 
     } catch (Exception e) {
