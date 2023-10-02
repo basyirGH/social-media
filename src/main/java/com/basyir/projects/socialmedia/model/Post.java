@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "post")
+
 public class Post {
 
     @Id
@@ -18,6 +19,8 @@ public class Post {
     private User user;
 
     private String content;
+    private int likesCount;
+    private int repliesCount;
 
     public Post (){
 
@@ -41,6 +44,23 @@ public class Post {
     public void setContent(String content) {
         this.content = content;
     }
+
+    public int getLikesCount() {
+        return likesCount;
+    }
+
+    public void setLikesCount(int likesCount) {
+        this.likesCount = likesCount;
+    }
+
+    public int getRepliesCount() {
+        return repliesCount;
+    }
+
+    public void setRepliesCount(int repliesCount) {
+        this.repliesCount = repliesCount;
+    }
+    
 
     
 

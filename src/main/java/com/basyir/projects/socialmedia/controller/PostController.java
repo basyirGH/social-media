@@ -19,12 +19,14 @@ public class PostController {
   PostRepository postRepository;
   @Autowired
   UserRepository userRepository;
+  @Autowired
+  PostRelationshipRepository prRepository;
 
   // Note
-  // @RequestParam -> /posts/create?id=[id]
+  // @RequestParam -> /posts/create?id={id}
   // @PathVariable -> /posts/create/{id}
-  @PostMapping("/create/{userId}")
-  public ResponseEntity<String> createPost(@PathVariable long userId, @RequestBody Post post) {
+  @PostMapping("/create")
+  public ResponseEntity<String> createPost(@RequestParam long userId, @RequestBody Post post) {
     try {
 
       Optional<User> userData = userRepository.findById(userId);
@@ -32,7 +34,6 @@ public class PostController {
       if (userData.isPresent()) {
         User user = userData.get();
         post.setUser(user);
-        post.setContent(post.getContent());
         postRepository.save(post);
         return new ResponseEntity<>("Post Created", HttpStatus.CREATED);
       } else {
@@ -66,7 +67,58 @@ public class PostController {
     }
   }
 
+  @GetMapping("/get")
+  public ResponseEntity<Object> getPost(@RequestParam long postId) {
+    try {
+
+      Optional<Post> postData = postRepository.findById(postId);
+
+      if (postData.isPresent()) {
+
+        Optional<Post> post = postRepository.findById(postId);
+        return new ResponseEntity<>(post, HttpStatus.OK);
+
+      } else {
+
+        return new ResponseEntity<>("Post not found.", HttpStatus.NOT_FOUND);
+
+      }
+    } catch (Exception ex) {
+
+      return new ResponseEntity<>(ex.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+      
+    }
+  }
+
+  @PostMapping("/reply")
+  public ResponseEntity<String> createReply(@RequestParam long parentPostId, @RequestParam long userId, @RequestBody Post reply) {
+    try {
+
+      Optional<User> userData = userRepository.findById(userId);
+      Optional<Post> parentPostData = postRepository.findById(parentPostId);
+
+      if (userData.isPresent() && parentPostData.isPresent()) {
+
+        User user = userData.get();
+        PostRelationship pr = new PostRelationship();
+        
+        reply.setUser(user);
+        pr.setParentPost(parentPostData.get());
+        pr.setChildPost(reply);
+
+        prRepository.save(pr);
+        postRepository.save(reply);
+        postRepository.updateRepliesCount(parentPostId, parentPostData.get().getRepliesCount() + 1);
+        return new ResponseEntity<>("Post Created", HttpStatus.CREATED);
+
+      } else {
+        return new ResponseEntity<>("Author/Post not found.", HttpStatus.NOT_FOUND);
+      }
+
+    } catch (Exception e) {
+      return new ResponseEntity<>(e.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
 }
 
-//get one post
-//create one reply

@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,15 +33,20 @@ public class LikeController {
       Optional<User> userData = userRepository.findById(userId);
 
       if (postData.isPresent() && userData.isPresent()) {
+
         Post post = postData.get();
         User user = userData.get();
         Like like = new Like();
         like.setPost(post);
         like.setUser(user);
         likeRepository.save(like);
+        postRepository.updateLikesCount(postId, post.getLikesCount() + 1);
         return new ResponseEntity<>("Post Liked", HttpStatus.CREATED);
+
       } else {
+
         return new ResponseEntity<>("Post/User not found.", HttpStatus.NOT_FOUND);
+
       }
 
     } catch (Exception e) {
