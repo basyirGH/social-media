@@ -67,3 +67,6 @@ public class PostController {
   }
 
 }
+
+//get one post
+//create one reply

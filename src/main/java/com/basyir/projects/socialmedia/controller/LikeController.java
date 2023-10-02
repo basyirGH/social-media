@@ -22,8 +22,8 @@ public class LikeController {
   @Autowired
   LikeRepository likeRepository;
 
-  @PostMapping("/push/{postId}/{userId}")
-  public ResponseEntity<String> pushLike(@PathVariable long postId, @PathVariable long userId) {
+  @PostMapping("/push")
+  public ResponseEntity<String> pushLike(@RequestParam long postId, @RequestParam long userId) {
     try {
 
       Optional<Post> postData = postRepository.findById(postId);
