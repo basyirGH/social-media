@@ -3,6 +3,8 @@ package com.basyir.projects.socialmedia.controller;
 import com.basyir.projects.socialmedia.model.*;
 import com.basyir.projects.socialmedia.repository.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -38,11 +40,15 @@ public class PostController {
     try {
 
       Optional<User> userData = userRepository.findById(userId);
+      LocalDateTime currentDateTime = LocalDateTime.now();
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+      currentDateTime.format(formatter);
 
       if (userData.isPresent()) {
 
         User user = userData.get();
         post.setUser(user);
+        post.setDateAndTimePosted(currentDateTime);
         postRepository.save(post);
         return new RedirectView("/");
 
@@ -63,7 +69,7 @@ public class PostController {
     }
   }
 
-  @GetMapping("/get/all")
+  @GetMapping("/get/all/from")
   public ModelAndView getUserPosts(@RequestParam long userId) {
 
     Optional<User> userData = userRepository.findById(userId);
@@ -79,7 +85,7 @@ public class PostController {
         });
         rd = new ModelAndView("/index");
         rd.addObject("post", new Post());
-        //posts.sort(Collections.reverseOrder());
+        // posts.sort(Collections.reverseOrder());
         rd.addObject("posts", posts);
         return rd;
 
@@ -90,6 +96,32 @@ public class PostController {
         return rd;
 
       }
+    } catch (Exception ex) {
+
+      rd = new ModelAndView("/error");
+      rd.addObject("msg", ex.toString());
+      System.out.println(ex.toString());
+      return rd;
+
+    }
+  }
+
+  @GetMapping("/get/all")
+  public ModelAndView getAllPosts() {
+
+    // List<User> userData = userRepository.findAll();
+    ModelAndView rd;
+
+    try {
+
+      // Attach user data to each post belonging to this User.
+      List<Post> posts = postRepository.findAll();
+      rd = new ModelAndView("/index");
+      rd.addObject("post", new Post());
+      // posts.sort(Collections.reverseOrder());
+      rd.addObject("posts", posts);
+      return rd;
+
     } catch (Exception ex) {
 
       rd = new ModelAndView("/error");

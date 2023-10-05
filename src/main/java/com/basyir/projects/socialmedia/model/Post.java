@@ -1,5 +1,6 @@
 package com.basyir.projects.socialmedia.model;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.*;
@@ -21,6 +22,7 @@ public class Post {
     private String content;
     private int likesCount;
     private int repliesCount;
+    private LocalDateTime dateAndTimePosted;
 
     public Post (){
 
@@ -59,6 +61,14 @@ public class Post {
 
     public void setRepliesCount(int repliesCount) {
         this.repliesCount = repliesCount;
+    }
+
+    public LocalDateTime getDateAndTimePosted() {
+        return dateAndTimePosted;
+    }
+
+    public void setDateAndTimePosted(LocalDateTime dateAndTimePosted) {
+        this.dateAndTimePosted = dateAndTimePosted;
     }
     
 
