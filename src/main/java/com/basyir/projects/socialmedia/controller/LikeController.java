@@ -25,7 +25,7 @@ public class LikeController {
   @Autowired
   LikeRepository likeRepository;
 
-  @PostMapping("/push")
+  @GetMapping("/push")
   public ResponseEntity<String> pushLike(@RequestParam long postId, @RequestParam long userId) {
     try {
 

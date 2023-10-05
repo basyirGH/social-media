@@ -67,8 +67,8 @@
                             </div>
                         </div>
                         <div>
-                            <a style="margin-right: 10px" href="">Like</a>
-                            <a href="">Reply</a>
+                            <a th:text="${post.likesCount} + ' Like'" style="margin-right: 10px" th:href="@{/likes/push(postId=${post.id}, userId=3)}"></a>
+                            <a th:text="${post.repliesCount + ' Reply'}" href=""></a>
                         </div>
                     </div>
                 </div>
