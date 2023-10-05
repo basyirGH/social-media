@@ -3,13 +3,20 @@ package com.basyir.projects.socialmedia.controller;
 import com.basyir.projects.socialmedia.model.*;
 import com.basyir.projects.socialmedia.repository.*;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 @RestController
 @RequestMapping("/posts")
@@ -26,30 +33,43 @@ public class PostController {
   // @RequestParam -> /posts/create?id={id}
   // @PathVariable -> /posts/create/{id}
   @PostMapping("/create")
-  public ResponseEntity<String> createPost(@RequestParam long userId, @RequestBody Post post) {
+  public RedirectView createPost(@ModelAttribute("post") Post post, @RequestParam long userId,
+      BindingResult bindingResult) {
     try {
 
       Optional<User> userData = userRepository.findById(userId);
 
       if (userData.isPresent()) {
+
         User user = userData.get();
         post.setUser(user);
         postRepository.save(post);
-        return new ResponseEntity<>("Post Created", HttpStatus.CREATED);
+        return new RedirectView("/");
+
       } else {
-        return new ResponseEntity<>("Author not found.", HttpStatus.NOT_FOUND);
+
+        RedirectView rd = new RedirectView("/error");
+        rd.addStaticAttribute("msg", "User not found");
+        return rd;
+
       }
 
     } catch (Exception e) {
-      return new ResponseEntity<>(e.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+      RedirectView rd = new RedirectView("/error");
+      rd.addStaticAttribute("msg", e);
+      return rd;
+
     }
   }
 
   @GetMapping("/get/all")
-  public ResponseEntity<Object> getUserPosts(@RequestParam long userId) {
-    try {
-      Optional<User> userData = userRepository.findById(userId);
+  public ModelAndView getUserPosts(@RequestParam long userId) {
 
+    Optional<User> userData = userRepository.findById(userId);
+    ModelAndView rd;
+
+    try {
       if (userData.isPresent()) {
 
         // Attach user data to each post belonging to this User.
@@ -57,13 +77,26 @@ public class PostController {
         posts.forEach(item -> {
           item.setUser(userData.get());
         });
+        rd = new ModelAndView("/index");
+        rd.addObject("post", new Post());
+        //posts.sort(Collections.reverseOrder());
+        rd.addObject("posts", posts);
+        return rd;
 
-        return new ResponseEntity<>(posts, HttpStatus.OK);
       } else {
-        return new ResponseEntity<>("Author not found.", HttpStatus.NOT_FOUND);
+
+        rd = new ModelAndView("/error");
+        rd.addObject("msg", "User not found");
+        return rd;
+
       }
     } catch (Exception ex) {
-      return new ResponseEntity<>(ex.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+      rd = new ModelAndView("/error");
+      rd.addObject("msg", ex.toString());
+      System.out.println(ex.toString());
+      return rd;
+
     }
   }
 
@@ -86,12 +119,13 @@ public class PostController {
     } catch (Exception ex) {
 
       return new ResponseEntity<>(ex.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
-      
+
     }
   }
 
   @PostMapping("/reply")
-  public ResponseEntity<String> createReply(@RequestParam long parentPostId, @RequestParam long userId, @RequestBody Post reply) {
+  public ResponseEntity<String> createReply(@RequestParam long parentPostId, @RequestParam long userId,
+      @RequestBody Post reply) {
     try {
 
       Optional<User> userData = userRepository.findById(userId);
@@ -101,7 +135,7 @@ public class PostController {
 
         User user = userData.get();
         PostRelationship pr = new PostRelationship();
-        
+
         reply.setUser(user);
         pr.setParentPost(parentPostData.get());
         pr.setChildPost(reply);
@@ -121,4 +155,3 @@ public class PostController {
   }
 
 }
-
