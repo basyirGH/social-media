@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 /*If you don't have any custom repository functions to implement and 
@@ -16,6 +17,7 @@ repository interface. Spring Data JPA automatically provides
 basic CRUD operations and query methods based on naming 
 conventions and method signatures. */
 
+@Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
   
   List<Post> findByUserId(long userId);
@@ -29,5 +31,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
   @Modifying(clearAutomatically = true)
   @Query("UPDATE Post p SET p.repliesCount = ?2 WHERE p.id = ?1")
   void updateRepliesCount(long postId, int repliesCount);
+
+  @Query("SELECT p FROM Post p ORDER BY p.dateAndTimePosted DESC")
+  List<Post> findPostsOrderByDateAndTimePosted();
 
 }

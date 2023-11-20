@@ -2,14 +2,16 @@ package com.basyir.projects.socialmedia.controller;
 
 import com.basyir.projects.socialmedia.model.*;
 import com.basyir.projects.socialmedia.repository.*;
+import com.basyir.projects.socialmedia.util.ModelAndViewProvider;
+import com.basyir.projects.socialmedia.util.apiresponse.BasicResponse;
+import com.basyir.projects.socialmedia.util.apiresponse.BasicStatus;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,8 +27,8 @@ public class LikeController {
   @Autowired
   LikeRepository likeRepository;
 
-  @GetMapping("/push")
-  public ResponseEntity<String> pushLike(@RequestParam long postId, @RequestParam long userId) {
+  @PostMapping("/push")
+  public ResponseEntity<Object> pushLike(@RequestParam long postId, @RequestParam long userId) {
     try {
 
       Optional<Post> postData = postRepository.findById(postId);
@@ -41,38 +43,40 @@ public class LikeController {
         like.setUser(user);
         likeRepository.save(like);
         postRepository.updateLikesCount(postId, post.getLikesCount() + 1);
-        return new ResponseEntity<>("Post Liked", HttpStatus.CREATED);
+        return new ResponseEntity<>(new BasicResponse(BasicStatus.SUCCESS, "Post liked."), HttpStatus.OK);
 
       } else {
 
-        return new ResponseEntity<>("Post/User not found.", HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, "Post not found."), HttpStatus.OK);
 
       }
 
     } catch (Exception e) {
-      return new ResponseEntity<>(e.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+      return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, e.toString()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  @GetMapping("/get/all")
-  public ResponseEntity<Object> getUserPosts(@RequestParam long userId) {
+  @GetMapping("/get/all/for")
+  public ResponseEntity<Object> getPostLikes(@RequestParam long postId) {
     try {
-      Optional<User> userData = userRepository.findById(userId);
+      Optional<User> userData = userRepository.findById(postId);
 
       if (userData.isPresent()) {
 
         // Attach user data to each post belonging to this User.
-        List<Post> posts = postRepository.findByUserId(userId);
+        List<Post> posts = postRepository.findByUserId(postId);
         posts.forEach(item -> {
           item.setUser(userData.get());
         });
 
         return new ResponseEntity<>(posts, HttpStatus.OK);
       } else {
-        return new ResponseEntity<>("Author not found.", HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, "User not found."), HttpStatus.OK);
       }
-    } catch (Exception ex) {
-      return new ResponseEntity<>(ex.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch (Exception e) {
+
+      return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, e.toString()), HttpStatus.INTERNAL_SERVER_ERROR);
+
     }
   }
 

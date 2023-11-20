@@ -2,23 +2,20 @@ package com.basyir.projects.socialmedia.controller;
 
 import com.basyir.projects.socialmedia.model.*;
 import com.basyir.projects.socialmedia.repository.*;
+import com.basyir.projects.socialmedia.util.apiresponse.BasicMessage;
+import com.basyir.projects.socialmedia.util.apiresponse.BasicResponse;
+import com.basyir.projects.socialmedia.util.apiresponse.BasicStatus;
+import com.basyir.projects.socialmedia.util.apiresponse.DataResponse;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 @RestController
 @RequestMapping("/posts")
@@ -35,8 +32,7 @@ public class PostController {
   // @RequestParam -> /posts/create?id={id}
   // @PathVariable -> /posts/create/{id}
   @PostMapping("/create")
-  public RedirectView createPost(@ModelAttribute("post") Post post, @RequestParam long userId,
-      BindingResult bindingResult) {
+  public ResponseEntity<Object> createPost(@ModelAttribute("post") Post post, @RequestParam long userId) {
     try {
 
       Optional<User> userData = userRepository.findById(userId);
@@ -50,30 +46,26 @@ public class PostController {
         post.setUser(user);
         post.setDateAndTimePosted(currentDateTime);
         postRepository.save(post);
-        return new RedirectView("/");
+        return new ResponseEntity<>(new BasicResponse(BasicStatus.SUCCESS, BasicMessage.POST_CREATED), HttpStatus.OK);
 
       } else {
 
-        RedirectView rd = new RedirectView("/error");
-        rd.addStaticAttribute("msg", "User not found");
-        return rd;
+        return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, BasicMessage.USER_NOT_FOUND),
+            HttpStatus.OK);
 
       }
 
     } catch (Exception e) {
 
-      RedirectView rd = new RedirectView("/error");
-      rd.addStaticAttribute("msg", e);
-      return rd;
+      return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, e.toString()), HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
   }
 
   @GetMapping("/get/all/from")
-  public ModelAndView getUserPosts(@RequestParam long userId) {
+  public ResponseEntity<Object> getUserPosts(@RequestParam long userId) {
 
     Optional<User> userData = userRepository.findById(userId);
-    ModelAndView rd;
 
     try {
       if (userData.isPresent()) {
@@ -83,51 +75,36 @@ public class PostController {
         posts.forEach(item -> {
           item.setUser(userData.get());
         });
-        rd = new ModelAndView("/index");
-        rd.addObject("post", new Post());
-        // posts.sort(Collections.reverseOrder());
-        rd.addObject("posts", posts);
-        return rd;
+
+        return new ResponseEntity<>(new DataResponse<>(BasicStatus.SUCCESS, BasicMessage.POSTS_FOUND, posts),
+            HttpStatus.OK);
 
       } else {
 
-        rd = new ModelAndView("/error");
-        rd.addObject("msg", "User not found");
-        return rd;
+        return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, BasicMessage.USER_NOT_FOUND),
+            HttpStatus.OK);
 
       }
     } catch (Exception ex) {
 
-      rd = new ModelAndView("/error");
-      rd.addObject("msg", ex.toString());
-      System.out.println(ex.toString());
-      return rd;
+      return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, ex.toString()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
   }
 
   @GetMapping("/get/all")
-  public ModelAndView getAllPosts() {
-
-    // List<User> userData = userRepository.findAll();
-    ModelAndView rd;
-
+  public ResponseEntity<Object> getAllPosts() {
     try {
 
-      // Attach user data to each post belonging to this User.
       List<Post> posts = postRepository.findAll();
-      rd = new ModelAndView("/index");
-      rd.addObject("post", new Post());
-      // posts.sort(Collections.reverseOrder());
-      rd.addObject("posts", posts);
-      return rd;
+      return new ResponseEntity<>(new DataResponse<>(BasicStatus.SUCCESS, BasicMessage.POSTS_FOUND, posts),
+          HttpStatus.OK);
 
     } catch (Exception ex) {
 
-      rd = new ModelAndView("/error");
-      rd.addObject("msg", ex.toString());
-      System.out.println(ex.toString());
-      return rd;
+      return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, ex.toString()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
   }
@@ -141,22 +118,25 @@ public class PostController {
       if (postData.isPresent()) {
 
         Optional<Post> post = postRepository.findById(postId);
-        return new ResponseEntity<>(post, HttpStatus.OK);
+        return new ResponseEntity<>(new DataResponse<>(BasicStatus.SUCCESS, BasicMessage.POST_FOUND, post),
+            HttpStatus.OK);
 
       } else {
 
-        return new ResponseEntity<>("Post not found.", HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, BasicMessage.POST_NOT_FOUND),
+            HttpStatus.OK);
 
       }
     } catch (Exception ex) {
 
-      return new ResponseEntity<>(ex.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+      return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, ex.toString()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
   }
 
   @PostMapping("/reply")
-  public ResponseEntity<String> createReply(@RequestParam long parentPostId, @RequestParam long userId,
+  public ResponseEntity<Object> createReply(@RequestParam long parentPostId, @RequestParam long userId,
       @RequestBody Post reply) {
     try {
 
@@ -175,14 +155,18 @@ public class PostController {
         prRepository.save(pr);
         postRepository.save(reply);
         postRepository.updateRepliesCount(parentPostId, parentPostData.get().getRepliesCount() + 1);
-        return new ResponseEntity<>("Post Created", HttpStatus.CREATED);
+        return new ResponseEntity<>(new BasicResponse(BasicStatus.SUCCESS, BasicMessage.POST_CREATED),
+            HttpStatus.OK);
 
       } else {
-        return new ResponseEntity<>("Author/Post not found.", HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, BasicMessage.POST_NOT_FOUND),
+            HttpStatus.OK);
       }
 
     } catch (Exception e) {
-      return new ResponseEntity<>(e.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+      return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, e.toString()), HttpStatus.INTERNAL_SERVER_ERROR);
+
     }
   }
 
