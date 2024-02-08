@@ -2,10 +2,8 @@ package com.basyir.projects.socialmedia.controller;
 
 import com.basyir.projects.socialmedia.model.*;
 import com.basyir.projects.socialmedia.repository.*;
-import com.basyir.projects.socialmedia.util.apiresponse.BasicMessage;
-import com.basyir.projects.socialmedia.util.apiresponse.BasicResponse;
-import com.basyir.projects.socialmedia.util.apiresponse.BasicStatus;
-import com.basyir.projects.socialmedia.util.apiresponse.DataResponse;
+import com.basyir.projects.socialmedia.dto.*;
+import com.basyir.projects.socialmedia.util.apiresponse.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -27,15 +25,18 @@ public class PostController {
   UserRepository userRepository;
   @Autowired
   PostRelationshipRepository prRepository;
+  @Autowired
+  LikeRepository likeRepository;
 
   // Note
-  // @RequestParam -> /posts/create?id={id}
-  // @PathVariable -> /posts/create/{id}
-  @PostMapping("/create")
-  public ResponseEntity<Object> createPost(@ModelAttribute("post") Post post, @RequestParam long userId) {
+  // @RequestParam -> /posts?id=123
+  // @PathVariable -> /posts/123
+  // CREATE A POST
+  @PostMapping("/")
+  public ResponseEntity<Object> createPost(@RequestBody CreatePostDTO requestBody) {
     try {
 
-      Optional<User> userData = userRepository.findById(userId);
+      Optional<User> userData = userRepository.findById(requestBody.getUserId());
       LocalDateTime currentDateTime = LocalDateTime.now();
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
       currentDateTime.format(formatter);
@@ -43,7 +44,9 @@ public class PostController {
       if (userData.isPresent()) {
 
         User user = userData.get();
+        Post post = new Post();
         post.setUser(user);
+        post.setContent(requestBody.getContent());
         post.setDateAndTimePosted(currentDateTime);
         postRepository.save(post);
         return new ResponseEntity<>(new BasicResponse(BasicStatus.SUCCESS, BasicMessage.POST_CREATED), HttpStatus.OK);
@@ -62,62 +65,16 @@ public class PostController {
     }
   }
 
-  @GetMapping("/get/all/from")
-  public ResponseEntity<Object> getUserPosts(@RequestParam long userId) {
-
-    Optional<User> userData = userRepository.findById(userId);
-
-    try {
-      if (userData.isPresent()) {
-
-        // Attach user data to each post belonging to this User.
-        List<Post> posts = postRepository.findByUserId(userId);
-        posts.forEach(item -> {
-          item.setUser(userData.get());
-        });
-
-        return new ResponseEntity<>(new DataResponse<>(BasicStatus.SUCCESS, BasicMessage.POSTS_FOUND, posts),
-            HttpStatus.OK);
-
-      } else {
-
-        return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, BasicMessage.USER_NOT_FOUND),
-            HttpStatus.OK);
-
-      }
-    } catch (Exception ex) {
-
-      return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, ex.toString()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-
-    }
-  }
-
-  @GetMapping("/get/all")
-  public ResponseEntity<Object> getAllPosts() {
-    try {
-
-      List<Post> posts = postRepository.findAll();
-      return new ResponseEntity<>(new DataResponse<>(BasicStatus.SUCCESS, BasicMessage.POSTS_FOUND, posts),
-          HttpStatus.OK);
-
-    } catch (Exception ex) {
-
-      return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, ex.toString()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-
-    }
-  }
-
-  @GetMapping("/get")
-  public ResponseEntity<Object> getPost(@RequestParam long postId) {
+  // GET A POST BY USER ID 
+  @GetMapping("/{postId}")
+  public ResponseEntity<Object> getPost(@PathVariable long postId) {
     try {
 
       Optional<Post> postData = postRepository.findById(postId);
 
       if (postData.isPresent()) {
 
-        Optional<Post> post = postRepository.findById(postId);
+        Post post = postData.get();
         return new ResponseEntity<>(new DataResponse<>(BasicStatus.SUCCESS, BasicMessage.POST_FOUND, post),
             HttpStatus.OK);
 
@@ -135,6 +92,54 @@ public class PostController {
     }
   }
 
+
+  // GET ALL POSTS IN THE SYSTEM
+  @GetMapping("/all/system")
+  public ResponseEntity<Object> getAllPosts() {
+    try {
+
+      List<Post> posts = postRepository.findAll();
+      return new ResponseEntity<>(new DataResponse<>(BasicStatus.SUCCESS, BasicMessage.POSTS_FOUND, posts),
+          HttpStatus.OK);
+
+    } catch (Exception ex) {
+
+      return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, ex.toString()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+
+    }
+  }
+
+  @PostMapping("/{postId}/like/{userId}")
+  public ResponseEntity<Object> likePost(@PathVariable long postId, @PathVariable long userId) {
+    try {
+
+      Optional<Post> postData = postRepository.findById(postId);
+      Optional<User> userData = userRepository.findById(userId);
+
+      if (postData.isPresent() && userData.isPresent()) {
+
+        Post post = postData.get();
+        User user = userData.get();
+        Like like = new Like();
+        like.setPost(post);
+        like.setUser(user);
+        likeRepository.save(like);
+        postRepository.updateLikesCount(postId, post.getLikesCount() + 1);
+        return new ResponseEntity<>(new BasicResponse(BasicStatus.SUCCESS, "Post liked."), HttpStatus.OK);
+
+      } else {
+
+        return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, "Post not found."), HttpStatus.OK);
+
+      }
+
+    } catch (Exception e) {
+      return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, e.toString()), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  
   @PostMapping("/reply")
   public ResponseEntity<Object> createReply(@RequestParam long parentPostId, @RequestParam long userId,
       @RequestBody Post reply) {

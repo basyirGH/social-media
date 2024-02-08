@@ -4,6 +4,7 @@ import com.basyir.projects.socialmedia.model.Post;
 
 import java.util.List;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -20,7 +21,8 @@ conventions and method signatures. */
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
   
-  List<Post> findByUserId(long userId);
+  @Cacheable("userPosts")
+  List<Post> findPostsByUserId(long userId);
 
   @Transactional
   @Modifying(clearAutomatically = true)
