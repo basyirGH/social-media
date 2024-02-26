@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 
 @RestController
 @RequestMapping("/posts")
@@ -94,18 +95,28 @@ public class PostController {
 
 
   // GET ALL POSTS IN THE SYSTEM
-  @GetMapping("/all/system")
-  public ResponseEntity<Object> getAllPosts() {
+  @GetMapping("/all")
+  public ModelAndView getAllPosts() {
     try {
 
       List<Post> posts = postRepository.findAll();
-      return new ResponseEntity<>(new DataResponse<>(BasicStatus.SUCCESS, BasicMessage.POSTS_FOUND, posts),
-          HttpStatus.OK);
+      ModelAndView mav = new ModelAndView();
+      mav.addObject("posts", posts);
+      mav.setViewName("index");
+      Long id = Long.valueOf(1);
+      Optional<Post> postData = postRepository.findById(id);
+      mav.addObject("post", postData.get());
+      return mav;
+      // return new ResponseEntity<>(new DataResponse<>(BasicStatus.SUCCESS, BasicMessage.POSTS_FOUND, posts),
+      //     HttpStatus.OK);
 
     } catch (Exception ex) {
-
-      return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, ex.toString()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
+      ModelAndView mav = new ModelAndView();
+      mav.setViewName("error");
+      mav.addObject("errorMessage", ex.toString());
+      return mav;
+      // return new ResponseEntity<>(new BasicResponse(BasicStatus.ERROR, ex.toString()),
+      //     HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
   }
